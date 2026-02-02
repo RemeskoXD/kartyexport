@@ -286,5 +286,6 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
 
         {!printMode && <div className="absolute inset-1 border border-gold-400 opacity-30 rounded-[8px] pointer-events-none z-50"></div>}
       </div>
-    );
+    </div>
+  );
 };
