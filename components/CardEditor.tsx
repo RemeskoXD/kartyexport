@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { CardConfig, Suit, Rank, GameType, GameConfig, CardStyle, OrderDetails, Order, CardBackConfig } from '../types';
 import { generateDeck, GAME_VARIANTS, getRankLabel } from '../utils/deckBuilder';
 import { dbService } from '../services/database';
-import CardPreview from './CardPreview';
+import { CardPreview } from './CardPreview';
 import { 
   Loader2, Upload, Trash2, Check, ArrowRight, ArrowLeft, 
   LayoutGrid, Edit3, Copy, Save, Box, ShoppingCart, 
@@ -188,7 +188,6 @@ const CardEditor: React.FC = () => {
       const newDeck = generateDeck(selectedGame, style);
       setDeck(newDeck);
       
-      // Select first unlocked card
       const firstEditable = newDeck.find(c => !c.isLocked);
       if (firstEditable) setActiveCardId(firstEditable.id);
 
@@ -200,16 +199,13 @@ const CardEditor: React.FC = () => {
           setBackConfig(prev => ({ ...prev, customImage: '/karty/M2H/RUB/m2h_v1_00_rub.png' }));
       } 
       else if (selectedGame === GameType.PokerStandard) {
-          // Poker Standard -> PST2BIG folder
           setBackConfig(prev => ({ ...prev, customImage: '/karty/PST2BIG/RUB/p2b_v1_00_rub.png' }));
       } 
       else if (selectedGame === GameType.PokerBig) {
-          // Poker Big -> PST4BIG folder
           setBackConfig(prev => ({ ...prev, customImage: '/karty/PST4BIG/RUB/p4b_v1_00_rub.png' }));
       } 
       else if (selectedGame === GameType.Canasta) {
-          // Canasta -> PST a CAN folder, file pst_v1_...
-          setBackConfig(prev => ({ ...prev, customImage: '/karty/PST%20a%20CAN/RUB/pst_v1_00_rub.png' }));
+          setBackConfig(prev => ({ ...prev, customImage: '/karty/PST_a_CAN/RUB/pst_v1_00_rub.png' }));
       }
     }
     setStep('design-back');
@@ -228,9 +224,7 @@ const CardEditor: React.FC = () => {
   };
 
   const handleDeckDesignComplete = () => {
-      // Pokud je styl "BackOnly", není nutné kontrolovat fotky na líc
       if (selectedStyle !== CardStyle.BackOnly) {
-          // Check only unlocked cards
           const incompleteCards = deck.filter(c => !c.customImage && !c.isLocked);
           if (incompleteCards.length > 0) {
               const list = incompleteCards
@@ -274,7 +268,6 @@ const CardEditor: React.FC = () => {
     }, 1500);
   };
 
-  // --- EDITOR LOGIC ---
   const activeCard = deck.find(c => c.id === activeCardId);
   const updateCard = (id: string, updates: Partial<CardConfig>) => {
     setDeck(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
@@ -284,10 +277,9 @@ const CardEditor: React.FC = () => {
   };
 
   const handleCardSelect = (card: CardConfig) => {
-    if (card.isLocked) return; // Prevent selecting locked cards
+    if (card.isLocked) return; 
 
     setActiveCardId(card.id);
-    // On mobile, scroll to editor
     if (window.innerWidth < 1280 && editorRef.current) {
         setTimeout(() => {
             editorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -332,7 +324,6 @@ const CardEditor: React.FC = () => {
             imageY: activeCard.imageY,
             isBackgroundRemoved: activeCard.isBackgroundRemoved
         };
-        // Apply only to unlocked cards
         setDeck(prev => prev.map(c => (c.rank === activeCard.rank && c.id !== activeCard.id && !c.isLocked) ? { ...c, ...updates } : c));
     }
   };
@@ -347,7 +338,6 @@ const CardEditor: React.FC = () => {
             imageY: activeCard.imageY,
             isBackgroundRemoved: activeCard.isBackgroundRemoved
         };
-        // Apply only to unlocked cards
         setDeck(prev => prev.map(c => (c.suit === activeCard.suit && c.id !== activeCard.id && !c.isLocked) ? { ...c, ...updates } : c));
     }
   };
@@ -360,7 +350,6 @@ const CardEditor: React.FC = () => {
   ) => (
       <div className="bg-navy-950/50 rounded-xl p-4 border border-white/10 space-y-4">
           <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-2">Pozice & Přiblížení</p>
-          
           <div className="space-y-2">
              <div className="flex justify-between text-xs text-gray-400">
                 <span className="flex items-center gap-1"><ZoomIn size={12}/> Zoom</span>
@@ -368,7 +357,6 @@ const CardEditor: React.FC = () => {
              </div>
              <input type="range" min="1" max="4" step="0.1" value={scale} onChange={(e) => onUpdate({ imageScale: parseFloat(e.target.value) })} className="w-full h-1 bg-navy-800 rounded-lg appearance-none cursor-pointer accent-gold-500" />
           </div>
-
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
                 <div className="flex justify-between text-xs text-gray-400">
@@ -376,17 +364,8 @@ const CardEditor: React.FC = () => {
                     <span className={x === 0 ? 'text-white font-bold' : ''}>{x}%</span>
                 </div>
                 <div className="relative h-4 flex items-center">
-                     {/* Center Marker */}
                     <div className="absolute left-1/2 -translate-x-1/2 w-0.5 h-2 bg-white/20 rounded-full"></div>
-                    <input 
-                        type="range" 
-                        min="-100" 
-                        max="100" 
-                        step="1" 
-                        value={x} 
-                        onChange={(e) => onUpdate({ imageX: parseInt(e.target.value) })} 
-                        className="w-full h-1 bg-navy-800 rounded-lg appearance-none cursor-pointer accent-gold-500 relative z-10" 
-                    />
+                    <input type="range" min="-100" max="100" step="1" value={x} onChange={(e) => onUpdate({ imageX: parseInt(e.target.value) })} className="w-full h-1 bg-navy-800 rounded-lg appearance-none cursor-pointer accent-gold-500 relative z-10" />
                 </div>
             </div>
             <div className="space-y-2">
@@ -395,17 +374,8 @@ const CardEditor: React.FC = () => {
                     <span className={y === 0 ? 'text-white font-bold' : ''}>{y}%</span>
                 </div>
                 <div className="relative h-4 flex items-center">
-                     {/* Center Marker */}
                     <div className="absolute left-1/2 -translate-x-1/2 w-0.5 h-2 bg-white/20 rounded-full"></div>
-                    <input 
-                        type="range" 
-                        min="-100" 
-                        max="100" 
-                        step="1" 
-                        value={y} 
-                        onChange={(e) => onUpdate({ imageY: parseInt(e.target.value) })} 
-                        className="w-full h-1 bg-navy-800 rounded-lg appearance-none cursor-pointer accent-gold-500 relative z-10" 
-                    />
+                    <input type="range" min="-100" max="100" step="1" value={y} onChange={(e) => onUpdate({ imageY: parseInt(e.target.value) })} className="w-full h-1 bg-navy-800 rounded-lg appearance-none cursor-pointer accent-gold-500 relative z-10" />
                 </div>
             </div>
           </div>
@@ -415,14 +385,13 @@ const CardEditor: React.FC = () => {
 
   const getGridClasses = () => {
     switch(gridZoomLevel) {
-      case 0: return 'grid-cols-4 sm:grid-cols-6 lg:grid-cols-8'; // Small
-      case 1: return 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-5'; // Medium (Default)
-      case 2: return 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'; // Large
+      case 0: return 'grid-cols-4 sm:grid-cols-6 lg:grid-cols-8'; 
+      case 1: return 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-5'; 
+      case 2: return 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'; 
       default: return 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-5';
     }
   };
 
-  // --- RENDER STEPS ---
   const renderGameSelection = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-in">
       {Object.values(GAME_VARIANTS).map((variant) => (
@@ -444,18 +413,9 @@ const CardEditor: React.FC = () => {
         { id: CardStyle.BackAndFaceFaces, label: 'RUB + OBLIČEJE', desc: 'Vaše tváře vložené do historických kostýmů králů a dam.', icon: <Smile /> },
         { id: CardStyle.CustomGame, label: 'VLASTNÍ HRA', desc: 'Prázdné karty. Navrhněte si úplně vše od nuly.', icon: <Edit3 /> },
     ];
-
-    // Filter available styles based on the selected game
-    let availableStyles = allStyles;
-    
-    // REMOVED RESTRICTION FOR M2H TO ALLOW TESTING ALL MODES
-    // if (selectedGame === GameType.MariasDouble) {
-    //    availableStyles = allStyles.filter(s => s.id === CardStyle.BackOnly || s.id === CardStyle.CustomGame);
-    // }
-
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
-        {availableStyles.map((style) => (
+        {allStyles.map((style) => (
             <div key={style.id} onClick={() => handleStyleSelect(style.id as CardStyle)} className="bg-white group cursor-pointer rounded-2xl p-4 transition-all hover:scale-105 hover:shadow-2xl border-4 border-transparent hover:border-gold-500">
             <div className="aspect-[3/4] bg-gray-100 rounded-xl mb-4 overflow-hidden relative flex items-center justify-center"><div className="text-gray-300 group-hover:text-gold-500 transition-colors transform scale-150">{style.icon}</div><div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-4"><span className="text-white font-bold uppercase tracking-widest text-sm">Vybrat</span></div></div>
             <h3 className="text-navy-900 font-bold text-center text-lg mb-1">{style.label}</h3>
@@ -495,8 +455,6 @@ const CardEditor: React.FC = () => {
   const renderEditor = () => (
     <div className="flex flex-col xl:flex-row gap-8 items-start h-full animate-fade-in mb-24">
       <div className="w-full xl:w-7/12 bg-navy-800/50 rounded-3xl border border-white/5 p-6 backdrop-blur-sm">
-        
-        {/* Editor Toolbar - Title & Zoom */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
            <div>
              <h3 className="text-white font-display text-xl">Editor: Líce karet</h3>
@@ -504,65 +462,25 @@ const CardEditor: React.FC = () => {
                  {deck.filter(c => c.customImage).length} / {deck.filter(c => !c.isLocked).length} upravitelných karet má fotku
              </p>
            </div>
-           
            <div className="flex items-center gap-2 bg-navy-900 p-1.5 rounded-lg border border-white/10">
-              <button 
-                onClick={() => setGridZoomLevel(Math.max(0, gridZoomLevel - 1))}
-                className={`p-1.5 rounded hover:bg-white/10 transition-colors ${gridZoomLevel === 0 ? 'opacity-50 cursor-not-allowed' : 'text-gray-300'}`}
-                disabled={gridZoomLevel === 0}
-                title="Zmenšit náhledy"
-              >
-                <ZoomOut size={18} />
-              </button>
+              <button onClick={() => setGridZoomLevel(Math.max(0, gridZoomLevel - 1))} className={`p-1.5 rounded hover:bg-white/10 transition-colors ${gridZoomLevel === 0 ? 'opacity-50 cursor-not-allowed' : 'text-gray-300'}`} disabled={gridZoomLevel === 0}><ZoomOut size={18} /></button>
               <div className="w-[1px] h-4 bg-white/10"></div>
-              <button 
-                onClick={() => setGridZoomLevel(Math.min(2, gridZoomLevel + 1))}
-                className={`p-1.5 rounded hover:bg-white/10 transition-colors ${gridZoomLevel === 2 ? 'opacity-50 cursor-not-allowed' : 'text-gray-300'}`}
-                disabled={gridZoomLevel === 2}
-                title="Zvětšit náhledy"
-              >
-                <ZoomIn size={18} />
-              </button>
+              <button onClick={() => setGridZoomLevel(Math.min(2, gridZoomLevel + 1))} className={`p-1.5 rounded hover:bg-white/10 transition-colors ${gridZoomLevel === 2 ? 'opacity-50 cursor-not-allowed' : 'text-gray-300'}`} disabled={gridZoomLevel === 2}><ZoomIn size={18} /></button>
            </div>
         </div>
-        
         <div className={`grid ${getGridClasses()} gap-3 md:gap-4 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar transition-all duration-300`}>
           {deck.map((c) => (
             <div key={c.id} className="relative group">
                <div className="relative">
-                 <CardPreview 
-                    card={c} 
-                    onClick={() => handleCardSelect(c)}
-                    selected={activeCardId === c.id}
-                    className={`transition-all duration-200 ${c.isLocked ? 'cursor-not-allowed grayscale-[0.8] opacity-70 hover:scale-100' : 'cursor-pointer'}`}
-                 />
-                 
-                 {/* Visual overlay for locked cards */}
-                 {c.isLocked && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 pointer-events-none rounded-xl">
-                        <Lock className="text-white/80 drop-shadow-md" size={24} />
-                    </div>
-                 )}
-
-                 {/* Explicit button overlay for mobile/clarity - only for editable cards */}
-                 {!c.isLocked && (
-                    <div 
-                        onClick={() => handleCardSelect(c)}
-                        className={`absolute inset-0 flex items-center justify-center bg-navy-950/60 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10 ${activeCardId === c.id ? 'opacity-0 pointer-events-none' : ''}`}
-                    >
-                        <div className="bg-gold-500 text-navy-900 rounded-full p-2 transform scale-75 group-hover:scale-100 transition-transform">
-                        <Edit3 size={20} />
-                        </div>
-                    </div>
-                 )}
+                 <CardPreview card={c} onClick={() => handleCardSelect(c)} selected={activeCardId === c.id} className={`transition-all duration-200 ${c.isLocked ? 'cursor-not-allowed grayscale-[0.8] opacity-70 hover:scale-100' : 'cursor-pointer'}`} />
+                 {c.isLocked && <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 pointer-events-none rounded-xl"><Lock className="text-white/80 drop-shadow-md" size={24} /></div>}
+                 {!c.isLocked && <div onClick={() => handleCardSelect(c)} className={`absolute inset-0 flex items-center justify-center bg-navy-950/60 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10 ${activeCardId === c.id ? 'opacity-0 pointer-events-none' : ''}`}><div className="bg-gold-500 text-navy-900 rounded-full p-2 transform scale-75 group-hover:scale-100 transition-transform"><Edit3 size={20} /></div></div>}
                </div>
-               
                {c.customImage && <div className="absolute top-[-4px] right-[-4px] w-5 h-5 bg-green-500 rounded-full border-2 border-navy-900 z-20 flex items-center justify-center"><Check size={10} className="text-navy-900 font-bold"/></div>}
             </div>
           ))}
         </div>
       </div>
-      
       <div ref={editorRef} className="w-full xl:w-5/12 xl:sticky xl:top-24 xl:max-h-[calc(100vh-120px)] overflow-y-auto custom-scrollbar-hidden scroll-mt-24">
         {activeCard ? (
           <div className="bg-navy-900 border border-gold-500/20 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
@@ -570,7 +488,6 @@ const CardEditor: React.FC = () => {
             <div className="flex justify-between items-start mb-6 relative z-10"><div><h2 className="text-3xl font-display text-white">Upravit Kartu</h2><p className="text-gold-400 font-serif text-lg mt-1">{getRankLabel(activeCard.rank, activeCard.gameType)} - {activeCard.suit}</p></div></div>
             <div className="flex justify-center mb-6 relative z-10"><div className="w-[240px] md:w-[280px]"><CardPreview card={activeCard} className="pointer-events-none" showCenterMark={!!activeCard.customImage} /></div></div>
             <div className="space-y-6 relative z-10">
-              {/* Only show upload for Face if not BackOnly */}
               {selectedStyle !== CardStyle.BackOnly && (
               <div className="space-y-3">
                  <label className="text-xs uppercase tracking-widest text-gray-400 font-bold">1. Fotografie</label>
@@ -581,12 +498,6 @@ const CardEditor: React.FC = () => {
                  )}
               </div>
               )}
-              {selectedStyle === CardStyle.BackOnly && (
-                  <div className="p-4 bg-white/5 rounded-xl border border-white/5 text-center text-gray-400 text-sm">
-                      U tohoto stylu se líce karet neupravují.
-                  </div>
-              )}
-
               {activeCard.customImage && activeCard.rank !== Rank.Joker && selectedStyle !== CardStyle.BackOnly && (
                 <div className="p-4 bg-white/5 rounded-xl border border-white/5"><p className="text-[10px] uppercase tracking-widest text-gray-500 mb-3 font-bold">Hromadné úpravy</p><div className="grid grid-cols-2 gap-2"><button onClick={applyImageToRank} className="bg-navy-950 hover:bg-navy-800 text-gray-300 text-xs py-2 px-3 rounded-lg border border-white/10 transition-all text-left">Na všechny <span className="text-gold-400">{getRankLabel(activeCard.rank, activeCard.gameType)}</span></button><button onClick={applyImageToSuit} className="bg-navy-950 hover:bg-navy-800 text-gray-300 text-xs py-2 px-3 rounded-lg border border-white/10 transition-all text-left">Na celou barvu <span className="text-gold-400">{activeCard.suit}</span></button></div></div>
               )}

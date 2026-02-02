@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Order, GameType, OrderStatus } from '../types';
 import { GAME_VARIANTS, getGameShortCode, getPrintDimensions } from '../utils/deckBuilder';
 import { dbService } from '../services/database';
-import CardPreview from './CardPreview';
+import { CardPreview } from './CardPreview';
 import { Package, Download, Printer, User, Search, Trash2, ArrowLeft, Image as ImageIcon, RefreshCw, Lock, LogIn, CheckCircle, Clock, AlertTriangle, XCircle, RotateCcw, FileArchive, Loader2 } from 'lucide-react';
 import JSZip from 'jszip';
 import * as FileSaver from 'file-saver';

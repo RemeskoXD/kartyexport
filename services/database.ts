@@ -1,7 +1,10 @@
 import { Order, OrderStatus } from '../types';
 
 // Konfigurace Backend Serveru (kde běží PHP a Databáze)
+// Frontend běží na web10.itnahodinu.cz nebo mycards.cz
+// Backend (API + DB) zůstává na web9.itnahodinu.cz
 const BACKEND_HOST = 'web9.itnahodinu.cz';
+
 // Poznámka: Ujistěte se, že web9 má platný SSL certifikát (https).
 // Pokud web9 běží jen na http, bude to blokováno prohlížečem (Mixed Content).
 const REMOTE_API_URL = `https://${BACKEND_HOST}/api.php`;
@@ -10,21 +13,13 @@ const REMOTE_API_URL = `https://${BACKEND_HOST}/api.php`;
 const getApiUrl = () => {
   const hostname = window.location.hostname;
   
-  // 1. Vývoj na Localhostu -> voláme web9
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return REMOTE_API_URL;
-  }
-  
-  // 2. Frontend Server (web10) -> voláme web9
-  if (hostname === 'web10.itnahodinu.cz') {
-    return REMOTE_API_URL;
-  }
-
-  // 3. Pokud by aplikace běžela přímo na backend serveru (web9)
+  // 1. Pokud aplikace běží přímo na backend serveru (web9), použijeme relativní cestu
   if (hostname === BACKEND_HOST) {
      return './api.php';
   }
 
+  // 2. Pro všechny ostatní případy (Localhost, Web10, MyCards.cz) 
+  // musíme volat vzdálené API na Web9 (vyžaduje CORS headers na serveru web9)
   return REMOTE_API_URL;
 };
 
@@ -88,7 +83,6 @@ export const dbService = {
   updateOrder: async (orderId: string, status: OrderStatus, deletedAt: string | null = null): Promise<boolean> => {
       try {
           // Zkusíme poslat update na server (pokud to API podporuje)
-          // Poznámka: Vzhledem k tomu, že nemáme kontrolu nad PHP backendem, implementuji i fallback na LocalStorage
           /* 
           const response = await fetch(API_URL, {
               method: 'POST',
@@ -97,9 +91,6 @@ export const dbService = {
               body: JSON.stringify({ action: 'update_status', id: orderId, status, deletedAt })
           });
           */
-         
-         // Simulace úspěchu pro LocalStorage logiku, protože API endpoint pro update pravděpodobně neexistuje v poskytnutém kontextu
-         // Pokud by existoval, odkomentujte fetch výše.
          
          // Fallback Update LocalStorage
          const existingOrders = JSON.parse(localStorage.getItem('mycards-admin-orders') || '[]');

@@ -131,11 +131,6 @@ const getPokerFileName = (prefix: 'pst' | 'p4b' | 'p2b', rank: Rank, suit: Suit,
     }
 
     // Index Calculation logic based on provided file order
-    // 01: Srdce A, 04-06: Srdce KQJ, 16-24: Srdce 10-2
-    // 34: Kara A, 07-09: Kara KQJ, 25-33: Kara 10-2
-    // 44: Krize A, 10-12: Krize KQJ, 35-43: Krize 10-2
-    // 54: Piky A, 13-15: Piky KQJ, 45-53: Piky 10-2
-
     if (suit === Suit.Hearts) {
         if (rank === Rank.Ace) index = 1;
         else if (rank === Rank.King) index = 4;
@@ -174,21 +169,18 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
   const suits = Object.values(Suit);
   let idCounter = 1;
 
-  // --- CONFIGURATION PER GAME TYPE ---
-
   let baseUrl = '';
-  let filePrefix: any = ''; // 'm1h', 'm2h', 'pst', 'p2b', 'p4b'
+  let filePrefix: any = ''; 
   let version = 'v1';
   let isMarias = false;
 
   switch(gameType) {
-      // MARIAS SINGLE (M1H)
-      // Folder structure: RUB (v1), RUB_a_LIC (v2 - UNDERSCORE), RUB a LIC_obliceje (v3 - SPACES)
+      // MARIAS SINGLE (M1H) - Uses underscores
       case GameType.MariasSingle: 
           isMarias = true;
           filePrefix = 'm1h';
           if (cardStyle === CardStyle.BackAndFaceFaces) { 
-              baseUrl = '/karty/M1H/RUB%20a%20LIC_obliceje/'; 
+              baseUrl = '/karty/M1H/RUB_a_LIC_oblicej/'; 
               version = 'v3'; 
           }
           else if (cardStyle === CardStyle.BackAndFace) { 
@@ -201,19 +193,17 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
           }
           break;
 
-      // MARIAS DOUBLE (M2H)
-      // Folder structure based on file list (only RUB exists, others predicted)
-      // RUB (v1), RUB a LIC (v2?), RUB a LIC_obliceje (v3?)
+      // MARIAS DOUBLE (M2H) - Uses underscores
       case GameType.MariasDouble: 
           isMarias = true;
           filePrefix = 'm2h';
           if (cardStyle === CardStyle.BackAndFaceFaces) { 
-              baseUrl = '/karty/M2H/RUB%20a%20LIC_obliceje/'; 
-              version = 'v3'; // Guessing version
+              baseUrl = '/karty/M2H/RUB_a_LIC_oblicej/'; 
+              version = 'v3';
           }
           else if (cardStyle === CardStyle.BackAndFace) { 
-              baseUrl = '/karty/M2H/RUB%20a%20LIC/'; 
-              version = 'v2'; // Guessing version
+              baseUrl = '/karty/M2H/RUB_a_LIC/'; 
+              version = 'v2';
           }
           else { 
               baseUrl = '/karty/M2H/RUB/';
@@ -221,15 +211,16 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
           }
           break;
 
-      // POKER STANDARD (PST2BIG)
+      // POKER STANDARD (PST2BIG) - Uses spaces in folder names on disk, but web server might need encoding or underscores?
+      // Based on user file list: PST2BIG exists. Folder structure usually matches M1H.
       case GameType.PokerStandard: 
           filePrefix = 'p2b'; 
           if (cardStyle === CardStyle.BackAndFace) { 
-              baseUrl = '/karty/PST2BIG/RUB%20a%20LIC/'; 
+              baseUrl = '/karty/PST2BIG/RUB_a_LIC/'; 
               version = 'v3'; 
           }
           else if (cardStyle === CardStyle.BackAndFaceFaces) { 
-              baseUrl = '/karty/PST2BIG/RUB%20a%20LIC_figury/'; 
+              baseUrl = '/karty/PST2BIG/RUB_a_LIC_figury/'; 
               version = 'v2'; 
           }
           else { 
@@ -242,11 +233,11 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
       case GameType.PokerBig: 
           filePrefix = 'p4b';
           if (cardStyle === CardStyle.BackAndFace) { 
-              baseUrl = '/karty/PST4BIG/RUB%20a%20LIC/'; 
+              baseUrl = '/karty/PST4BIG/RUB_a_LIC/'; 
               version = 'v3'; 
           }
           else if (cardStyle === CardStyle.BackAndFaceFaces) { 
-              baseUrl = '/karty/PST4BIG/RUB%20a%20LIC_figury/'; 
+              baseUrl = '/karty/PST4BIG/RUB_a_LIC_figury/'; 
               version = 'v2'; 
           }
           else { 
@@ -255,19 +246,19 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
           }
           break;
 
-      // CANASTA (PST a CAN)
+      // CANASTA (PST_a_CAN) - Underscores in folder name per file list!
       case GameType.Canasta: 
           filePrefix = 'pst';
           if (cardStyle === CardStyle.BackAndFace) { 
-              baseUrl = '/karty/PST%20a%20CAN/RUB%20a%20LIC/'; 
+              baseUrl = '/karty/PST_a_CAN/RUB_a_LIC/'; 
               version = 'v3'; 
           }
           else if (cardStyle === CardStyle.BackAndFaceFaces) { 
-              baseUrl = '/karty/PST%20a%20CAN/RUB%20a%20LIC_figury/'; 
+              baseUrl = '/karty/PST_a_CAN/RUB_a_LIC_figury/'; 
               version = 'v2'; 
           }
           else { 
-              baseUrl = '/karty/PST%20a%20CAN/RUB/'; 
+              baseUrl = '/karty/PST_a_CAN/RUB/'; 
               version = 'v1'; 
           }
           break;
@@ -279,28 +270,18 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
       let templateImage: string | undefined = undefined;
       let isLocked = false;
 
-      // Generate filename
       const fileName = isMarias 
         ? getMariasFileName(filePrefix, rank, suit, version)
         : getPokerFileName(filePrefix, rank, suit, version);
       
       templateImage = `${baseUrl}${fileName}`;
 
-      // Locking Logic
       if (cardStyle === CardStyle.BackOnly) {
           isLocked = true;
       } else if (cardStyle === CardStyle.BackAndFaceFaces) {
-          // Only faces unlocked
-          if (isMarias) {
-              if (![Rank.Jack, Rank.Queen, Rank.King].includes(rank)) isLocked = true;
-          } else {
-              if (![Rank.Jack, Rank.Queen, Rank.King].includes(rank)) isLocked = true;
-          }
+          if (![Rank.Jack, Rank.Queen, Rank.King].includes(rank)) isLocked = true;
       } else if (cardStyle === CardStyle.BackAndFace) {
-          // Marias: 7-10 locked. Poker: All unlocked (usually)
-          if (isMarias) {
-              if ([Rank.Seven, Rank.Eight, Rank.Nine, Rank.Ten].includes(rank)) isLocked = true;
-          }
+          if (isMarias && [Rank.Seven, Rank.Eight, Rank.Nine, Rank.Ten].includes(rank)) isLocked = true;
       }
 
       deck.push({
@@ -312,13 +293,10 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
     });
   });
 
-  // --- JOKERS (For Poker/Canasta) ---
   if ([GameType.PokerStandard, GameType.PokerBig, GameType.Canasta].includes(gameType)) {
       const jokerLocked = cardStyle === CardStyle.BackOnly;
-      
-      // Filenames for Jokers
-      const redJoker = getPokerFileName(filePrefix, Rank.Joker, Suit.Hearts, version); // ID 02
-      const blackJoker = getPokerFileName(filePrefix, Rank.Joker, Suit.Spades, version); // ID 03
+      const redJoker = getPokerFileName(filePrefix, Rank.Joker, Suit.Hearts, version); 
+      const blackJoker = getPokerFileName(filePrefix, Rank.Joker, Suit.Spades, version); 
 
       deck.push({
           id: `card-joker-1-${idCounter++}`,
@@ -339,9 +317,7 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
 
 export const getRankLabel = (rank: Rank, gameType: GameType): string => {
   if (rank === Rank.Joker) return 'JOKER';
-
   const isMarias = gameType === GameType.MariasSingle || gameType === GameType.MariasDouble;
-  
   if (isMarias) {
     switch(rank) {
       case Rank.Jack: return 'Spodek';

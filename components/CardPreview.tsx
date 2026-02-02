@@ -3,7 +3,7 @@ import { CardConfig, Suit, GameType, Rank, CardBackConfig } from '../types';
 import { getSuitIcon } from './Icons';
 import { getRankLabel } from '../utils/deckBuilder';
 
-interface CardPreviewProps {
+export interface CardPreviewProps {
   card?: CardConfig;
   backConfig?: CardBackConfig;
   className?: string;
@@ -14,7 +14,7 @@ interface CardPreviewProps {
   showCenterMark?: boolean; // New prop for positioning help
 }
 
-const CardPreview: React.FC<CardPreviewProps> = ({ 
+export const CardPreview: React.FC<CardPreviewProps> = ({ 
   card, 
   backConfig,
   className = '', 
@@ -30,6 +30,9 @@ const CardPreview: React.FC<CardPreviewProps> = ({
   // Safe accessors depending on what data we have
   const gameType = card?.gameType || GameType.PokerStandard; // Fallback for back preview
   
+  // CORS Policy: Only use anonymous crossorigin when strictly needed (exporting/printing/canvas)
+  const crossOriginAttr = printMode ? "anonymous" : undefined;
+
   // Aspect Ratio
   const getAspectRatioClass = () => {
     if (printMode) return 'w-full h-full';
@@ -45,6 +48,21 @@ const CardPreview: React.FC<CardPreviewProps> = ({
       default:
         return 'aspect-[63/88]';
     }
+  };
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+      const target = e.currentTarget;
+      const src = target.src;
+      console.warn("Failed to load image:", src);
+      
+      // Try uppercase extension fallback for Linux servers (case sensitivity)
+      if (src.endsWith('.png') && !src.includes('RETRY_UPPER')) {
+          target.src = src.replace('.png', '.PNG') + '?RETRY_UPPER';
+      } else if (src.endsWith('.PNG') && !src.includes('RETRY_LOWER')) {
+          target.src = src.replace('.PNG', '.png') + '?RETRY_LOWER';
+      } else {
+         // Placeholder logic handled by UI if image is broken
+      }
   };
 
   // --- RENDER BACK ---
@@ -73,7 +91,8 @@ const CardPreview: React.FC<CardPreviewProps> = ({
                 <img 
                   src={image} 
                   alt="Card Back" 
-                  crossOrigin="anonymous"
+                  crossOrigin={crossOriginAttr}
+                  onError={handleImageError}
                   className="w-full h-full object-cover transition-transform duration-100"
                   style={{ transform: `scale(${scale}) translate(${x}%, ${y}%)` }}
                 />
@@ -199,7 +218,8 @@ const CardPreview: React.FC<CardPreviewProps> = ({
                    <img 
                     src={templateImageSrc} 
                     alt="Template" 
-                    crossOrigin="anonymous"
+                    crossOrigin={crossOriginAttr}
+                    onError={handleImageError}
                     className="w-full h-full object-cover" 
                    />
                </div>
@@ -216,7 +236,7 @@ const CardPreview: React.FC<CardPreviewProps> = ({
                  <img 
                    src={customImageSrc} 
                    alt="Custom" 
-                   crossOrigin="anonymous"
+                   crossOrigin={crossOriginAttr}
                    className={`w-full h-full object-cover z-10 transition-transform duration-100 ${card.isBackgroundRemoved ? 'object-contain scale-90' : ''}`}
                    style={{ transform: `scale(${card.imageScale}) translate(${card.imageX}%, ${card.imageY}%)` }}
                  />
@@ -226,7 +246,7 @@ const CardPreview: React.FC<CardPreviewProps> = ({
                       <img 
                         src={customImageSrc} 
                         alt="Top" 
-                        crossOrigin="anonymous"
+                        crossOrigin={crossOriginAttr}
                         className={`w-full h-[200%] object-cover object-top transition-transform duration-100 ${card.isBackgroundRemoved ? 'object-contain' : ''}`}
                         style={{ transform: `scale(${card.imageScale}) translate(${card.imageX}%, ${card.imageY}%)` }}
                       />
@@ -235,7 +255,7 @@ const CardPreview: React.FC<CardPreviewProps> = ({
                       <img 
                         src={customImageSrc} 
                         alt="Bottom" 
-                        crossOrigin="anonymous"
+                        crossOrigin={crossOriginAttr}
                         className={`w-full h-[200%] object-cover object-top transition-transform duration-100 ${card.isBackgroundRemoved ? 'object-contain' : ''}`}
                         style={{ transform: `scale(${card.imageScale}) translate(${card.imageX}%, ${card.imageY}%)` }}
                       />
@@ -264,7 +284,8 @@ const CardPreview: React.FC<CardPreviewProps> = ({
                    <img 
                     src={templateImageSrc} 
                     alt="Template" 
-                    crossOrigin="anonymous"
+                    crossOrigin={crossOriginAttr}
+                    onError={handleImageError}
                     className="w-full h-full object-cover" 
                    />
                </div>
@@ -293,8 +314,5 @@ const CardPreview: React.FC<CardPreviewProps> = ({
 
         {!printMode && <div className="absolute inset-1 border border-gold-400 opacity-30 rounded-[8px] pointer-events-none z-50"></div>}
       </div>
-    </div>
-  );
-};
-
-export default CardPreview;
+    );
+  };
