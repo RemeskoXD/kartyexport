@@ -69,7 +69,6 @@ const getMariasFileName = (prefix: 'm1h' | 'm2h', rank: Rank, suit: Suit, versio
     let suitOffset = 0;
     let suitName = '';
     
-    // LOGIC: M1H uses 'zaludy' (plural), M2H uses 'zalud' (singular) based on file list.
     const zaludName = prefix === 'm1h' ? 'zaludy' : 'zalud';
 
     switch(suit) {
@@ -95,8 +94,8 @@ const getMariasFileName = (prefix: 'm1h' | 'm2h', rank: Rank, suit: Suit, versio
     const finalIndex = suitOffset + rankOffset;
     const paddedIndex = finalIndex.toString().padStart(2, '0');
     
-    // Změna na .PNG (velká písmena) pro shodu se serverem
-    return `${prefix}_${version}_${paddedIndex}_${suitName}_${rankName}.PNG`;
+    // Standardize to lowercase .png
+    return `${prefix}_${version}_${paddedIndex}_${suitName}_${rankName}.png`;
 };
 
 const getPokerFileName = (prefix: 'pst' | 'p4b' | 'p2b', rank: Rank, suit: Suit, version: string): string => {
@@ -107,12 +106,9 @@ const getPokerFileName = (prefix: 'pst' | 'p4b' | 'p2b', rank: Rank, suit: Suit,
     // Handle JOKER
     if (rank === Rank.Joker) {
         index = (suit === Suit.Hearts || suit === Suit.Diamonds) ? 2 : 3;
-        // Změna na .PNG
-        return `${prefix}_${version}_${index.toString().padStart(2, '0')}_joker.PNG`;
+        return `${prefix}_${version}_${index.toString().padStart(2, '0')}_joker.png`;
     }
 
-    // Handle Suit Names (Diamond inconsistency: 'kara' vs 'kary')
-    // PST (Canasta) v1 uses 'kary'. ALL others (including PST v2/v3) use 'kara'
     let diamondName = 'kara'; 
     if (prefix === 'pst' && version === 'v1') diamondName = 'kary'; 
     
@@ -123,7 +119,6 @@ const getPokerFileName = (prefix: 'pst' | 'p4b' | 'p2b', rank: Rank, suit: Suit,
         case Suit.Spades: suitName = 'piky'; break;
     }
 
-    // Handle Rank Names
     switch(rank) {
         case Rank.Ace: rankName = 'eso'; break;
         case Rank.King: rankName = 'kral'; break;
@@ -132,7 +127,6 @@ const getPokerFileName = (prefix: 'pst' | 'p4b' | 'p2b', rank: Rank, suit: Suit,
         default: rankName = rank; break;
     }
 
-    // Index Calculation logic based on provided file order
     if (suit === Suit.Hearts) {
         if (rank === Rank.Ace) index = 1;
         else if (rank === Rank.King) index = 4;
@@ -162,8 +156,7 @@ const getPokerFileName = (prefix: 'pst' | 'p4b' | 'p2b', rank: Rank, suit: Suit,
         else index = 45 + (10 - parseInt(rank));
     }
 
-    // Změna na .PNG (velká písmena)
-    return `${prefix}_${version}_${index.toString().padStart(2, '0')}_${suitName}_${rankName}.PNG`;
+    return `${prefix}_${version}_${index.toString().padStart(2, '0')}_${suitName}_${rankName}.png`;
 };
 
 export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConfig[] => {
@@ -178,7 +171,6 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
   let isMarias = false;
 
   switch(gameType) {
-      // MARIAS SINGLE (M1H) - Uses underscores
       case GameType.MariasSingle: 
           isMarias = true;
           filePrefix = 'm1h';
@@ -196,7 +188,6 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
           }
           break;
 
-      // MARIAS DOUBLE (M2H) - Uses underscores
       case GameType.MariasDouble: 
           isMarias = true;
           filePrefix = 'm2h';
@@ -214,8 +205,6 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
           }
           break;
 
-      // POKER STANDARD (PST2BIG) - Uses spaces in folder names on disk, but web server might need encoding or underscores?
-      // Based on user file list: PST2BIG exists. Folder structure usually matches M1H.
       case GameType.PokerStandard: 
           filePrefix = 'p2b'; 
           if (cardStyle === CardStyle.BackAndFace) { 
@@ -232,7 +221,6 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
           }
           break;
 
-      // POKER BIG (PST4BIG)
       case GameType.PokerBig: 
           filePrefix = 'p4b';
           if (cardStyle === CardStyle.BackAndFace) { 
@@ -249,7 +237,6 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
           }
           break;
 
-      // CANASTA (PST_a_CAN) - Underscores in folder name per file list!
       case GameType.Canasta: 
           filePrefix = 'pst';
           if (cardStyle === CardStyle.BackAndFace) { 

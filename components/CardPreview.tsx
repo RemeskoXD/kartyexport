@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CardConfig, Suit, GameType, Rank, CardBackConfig } from '../types';
 import { getSuitIcon } from './Icons';
 import { getRankLabel } from '../utils/deckBuilder';
@@ -27,6 +27,12 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
   const isBack = side === 'back';
   const gameType = card?.gameType || GameType.PokerStandard;
   const crossOriginAttr = printMode ? "anonymous" : undefined;
+  const [imgError, setImgError] = useState(false);
+
+  // Reset error state when card changes
+  useEffect(() => {
+    setImgError(false);
+  }, [card?.templateImage, backConfig?.customImage]);
 
   const getAspectRatioClass = () => {
     if (printMode) return 'w-full h-full';
@@ -41,18 +47,9 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
     }
   };
 
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-      const target = e.currentTarget;
-      const src = target.src;
-      console.warn("Failed to load image:", src);
-      
-      // Default deckbuilder now generates .PNG (uppercase).
-      // Fallback logic: try .png (lowercase) if uppercase fails.
-      if (src.endsWith('.PNG') && !src.includes('RETRY_LOWER')) {
-          target.src = src.replace('.PNG', '.png') + '?RETRY_LOWER';
-      } else if (src.endsWith('.png') && !src.includes('RETRY_UPPER')) {
-          target.src = src.replace('.png', '.PNG') + '?RETRY_UPPER';
-      }
+  const handleImageError = () => {
+      // If image fails, switch to CSS Fallback mode
+      setImgError(true);
   };
 
   // --- RENDER BACK ---
@@ -75,8 +72,8 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
 
     return (
       <div onClick={!printMode ? onClick : undefined} className={containerClasses}>
-        <div className={innerClasses} style={{ borderColor: printMode ? '#000000' : borderColor, background: !image ? defaultPattern : 'white' }}>
-           {image ? (
+        <div className={innerClasses} style={{ borderColor: printMode ? '#000000' : borderColor, background: !image || imgError ? defaultPattern : 'white' }}>
+           {image && !imgError ? (
              <div className="absolute inset-0 overflow-hidden">
                 <img 
                   src={image} 
@@ -86,18 +83,20 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                   className="w-full h-full object-cover transition-transform duration-100"
                   style={{ transform: `scale(${scale}) translate(${x}%, ${y}%)` }}
                 />
-                {showCenterMark && !printMode && (
-                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-20">
-                    <div className="w-8 h-[1px] bg-gold-500/50 absolute"></div>
-                    <div className="h-8 w-[1px] bg-gold-500/50 absolute"></div>
-                    <div className="w-2 h-2 rounded-full border border-gold-500/50 absolute"></div>
-                  </div>
-                )}
              </div>
            ) : (
              <div className="absolute inset-0 flex items-center justify-center opacity-20">
                 <div className="w-16 h-16 border-2 border-gold-500 transform rotate-45"></div>
              </div>
+           )}
+           
+           {/* Center Mark for Print */}
+           {showCenterMark && !printMode && (
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-20">
+                <div className="w-8 h-[1px] bg-gold-500/50 absolute"></div>
+                <div className="h-8 w-[1px] bg-gold-500/50 absolute"></div>
+                <div className="w-2 h-2 rounded-full border border-gold-500/50 absolute"></div>
+              </div>
            )}
            
            {text && (
@@ -108,7 +107,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
             </div>
            )}
 
-           {!image && !printMode && (
+           {(!image || imgError) && !printMode && (
              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
            )}
         </div>
@@ -142,8 +141,10 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
     <div onClick={!printMode ? onClick : undefined} className={containerClasses}>
       <div className={innerClasses} style={{ borderColor: printMode ? '#000000' : card.borderColor }}>
         
-        {!hasTemplate && (
+        {/* CSS FALLBACK: If template image fails or is missing, we render standard corner indices */}
+        {(!hasTemplate || imgError) && (
             <>
+                {/* TOP LEFT */}
                 <div className="absolute top-[5%] left-[5%] flex flex-col items-center z-20">
                 {isJoker ? (
                     <div className="flex flex-col items-center">
@@ -166,6 +167,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                 )}
                 </div>
 
+                {/* BOTTOM RIGHT (Rotated) */}
                 {!isSingleHeaded && (
                 <div className="absolute bottom-[5%] right-[5%] flex flex-col items-center transform rotate-180 z-20">
                     {isJoker ? (
@@ -189,11 +191,19 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                     )}
                 </div>
                 )}
+
+                {/* CENTER ART (Only if missing template image) */}
+                {(!card.customImage) && (
+                    <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+                         {getSuitIcon(card.suit, "w-32 h-32", isJoker)}
+                    </div>
+                )}
             </>
         )}
 
         <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden">
-           {hasTemplate && !isMaskStyle && card.templateImage && (
+           {/* TEMPLATE IMAGE (The card frame/artwork) */}
+           {hasTemplate && !isMaskStyle && card.templateImage && !imgError && (
                <div className="absolute inset-0 z-0">
                    <img 
                     src={card.templateImage} 
@@ -205,6 +215,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                </div>
            )}
 
+           {/* USER UPLOADED PHOTO */}
            {card.customImage ? (
              <div className={`relative w-full h-full ${isMaskStyle ? 'z-0' : 'z-10'}`}>
                {card.isBackgroundRemoved && !printMode && (
@@ -256,7 +267,8 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
              )
            )}
 
-           {hasTemplate && isMaskStyle && card.templateImage && (
+           {/* MASK OVERLAY (For Face-in-hole cards) */}
+           {hasTemplate && isMaskStyle && card.templateImage && !imgError && (
                <div className="absolute inset-0 z-20 pointer-events-none">
                    <img 
                     src={card.templateImage} 
