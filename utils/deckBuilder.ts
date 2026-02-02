@@ -1,5 +1,8 @@
 import { GameType, CardConfig, Suit, Rank, GameConfig, CardStyle } from '../types';
 
+// TOTO JE KLÍČOVÁ ZMĚNA - Odkazujeme na externí úložiště obrázků
+const CDN_URL = 'https://webkarty.itnahodinu.cz/karty';
+
 export const GAME_VARIANTS: Record<GameType, GameConfig> = {
   [GameType.MariasSingle]: {
     id: GameType.MariasSingle,
@@ -69,6 +72,7 @@ const getMariasFileName = (prefix: 'm1h' | 'm2h', rank: Rank, suit: Suit, versio
     let suitOffset = 0;
     let suitName = '';
     
+    // M1H = zaludy, M2H = zalud
     const zaludName = prefix === 'm1h' ? 'zaludy' : 'zalud';
 
     switch(suit) {
@@ -94,8 +98,8 @@ const getMariasFileName = (prefix: 'm1h' | 'm2h', rank: Rank, suit: Suit, versio
     const finalIndex = suitOffset + rankOffset;
     const paddedIndex = finalIndex.toString().padStart(2, '0');
     
-    // Force .png and add version parameter to bust cache
-    return `${prefix}_${version}_${paddedIndex}_${suitName}_${rankName}.png?v=fixed`;
+    // Všechna jména souborů malými písmeny .png
+    return `${prefix}_${version}_${paddedIndex}_${suitName}_${rankName}.png`;
 };
 
 const getPokerFileName = (prefix: 'pst' | 'p4b' | 'p2b', rank: Rank, suit: Suit, version: string): string => {
@@ -103,10 +107,9 @@ const getPokerFileName = (prefix: 'pst' | 'p4b' | 'p2b', rank: Rank, suit: Suit,
     let suitName = '';
     let rankName = '';
 
-    // Handle JOKER
     if (rank === Rank.Joker) {
         index = (suit === Suit.Hearts || suit === Suit.Diamonds) ? 2 : 3;
-        return `${prefix}_${version}_${index.toString().padStart(2, '0')}_joker.png?v=fixed`;
+        return `${prefix}_${version}_${index.toString().padStart(2, '0')}_joker.png`;
     }
 
     let diamondName = 'kara'; 
@@ -156,7 +159,7 @@ const getPokerFileName = (prefix: 'pst' | 'p4b' | 'p2b', rank: Rank, suit: Suit,
         else index = 45 + (10 - parseInt(rank));
     }
 
-    return `${prefix}_${version}_${index.toString().padStart(2, '0')}_${suitName}_${rankName}.png?v=fixed`;
+    return `${prefix}_${version}_${index.toString().padStart(2, '0')}_${suitName}_${rankName}.png`;
 };
 
 export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConfig[] => {
@@ -170,20 +173,21 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
   let version = 'v1';
   let isMarias = false;
 
+  // Zde definujeme cesty k novému serveru
   switch(gameType) {
       case GameType.MariasSingle: 
           isMarias = true;
           filePrefix = 'm1h';
           if (cardStyle === CardStyle.BackAndFaceFaces) { 
-              baseUrl = '/karty/M1H/RUB_a_LIC_oblicej/'; 
+              baseUrl = `${CDN_URL}/M1H/RUB_a_LIC_oblicej/`; 
               version = 'v3'; 
           }
           else if (cardStyle === CardStyle.BackAndFace) { 
-              baseUrl = '/karty/M1H/RUB_a_LIC/'; 
+              baseUrl = `${CDN_URL}/M1H/RUB_a_LIC/`; 
               version = 'v2'; 
           }
           else { 
-              baseUrl = '/karty/M1H/RUB/'; 
+              baseUrl = `${CDN_URL}/M1H/RUB/`; 
               version = 'v1'; 
           }
           break;
@@ -192,15 +196,15 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
           isMarias = true;
           filePrefix = 'm2h';
           if (cardStyle === CardStyle.BackAndFaceFaces) { 
-              baseUrl = '/karty/M2H/RUB_a_LIC_oblicej/'; 
+              baseUrl = `${CDN_URL}/M2H/RUB_a_LIC_oblicej/`; 
               version = 'v3';
           }
           else if (cardStyle === CardStyle.BackAndFace) { 
-              baseUrl = '/karty/M2H/RUB_a_LIC/'; 
+              baseUrl = `${CDN_URL}/M2H/RUB_a_LIC/`; 
               version = 'v2';
           }
           else { 
-              baseUrl = '/karty/M2H/RUB/';
+              baseUrl = `${CDN_URL}/M2H/RUB/`;
               version = 'v1';
           }
           break;
@@ -208,15 +212,15 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
       case GameType.PokerStandard: 
           filePrefix = 'p2b'; 
           if (cardStyle === CardStyle.BackAndFace) { 
-              baseUrl = '/karty/PST2BIG/RUB_a_LIC/'; 
+              baseUrl = `${CDN_URL}/PST2BIG/RUB_a_LIC/`; 
               version = 'v3'; 
           }
           else if (cardStyle === CardStyle.BackAndFaceFaces) { 
-              baseUrl = '/karty/PST2BIG/RUB_a_LIC_figury/'; 
+              baseUrl = `${CDN_URL}/PST2BIG/RUB_a_LIC_figury/`; 
               version = 'v2'; 
           }
           else { 
-              baseUrl = '/karty/PST2BIG/RUB/'; 
+              baseUrl = `${CDN_URL}/PST2BIG/RUB/`; 
               version = 'v1'; 
           }
           break;
@@ -224,15 +228,15 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
       case GameType.PokerBig: 
           filePrefix = 'p4b';
           if (cardStyle === CardStyle.BackAndFace) { 
-              baseUrl = '/karty/PST4BIG/RUB_a_LIC/'; 
+              baseUrl = `${CDN_URL}/PST4BIG/RUB_a_LIC/`; 
               version = 'v3'; 
           }
           else if (cardStyle === CardStyle.BackAndFaceFaces) { 
-              baseUrl = '/karty/PST4BIG/RUB_a_LIC_figury/'; 
+              baseUrl = `${CDN_URL}/PST4BIG/RUB_a_LIC_figury/`; 
               version = 'v2'; 
           }
           else { 
-              baseUrl = '/karty/PST4BIG/RUB/'; 
+              baseUrl = `${CDN_URL}/PST4BIG/RUB/`; 
               version = 'v1'; 
           }
           break;
@@ -240,15 +244,15 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
       case GameType.Canasta: 
           filePrefix = 'pst';
           if (cardStyle === CardStyle.BackAndFace) { 
-              baseUrl = '/karty/PST_a_CAN/RUB_a_LIC/'; 
+              baseUrl = `${CDN_URL}/PST_a_CAN/RUB_a_LIC/`; 
               version = 'v3'; 
           }
           else if (cardStyle === CardStyle.BackAndFaceFaces) { 
-              baseUrl = '/karty/PST_a_CAN/RUB_a_LIC_figury/'; 
+              baseUrl = `${CDN_URL}/PST_a_CAN/RUB_a_LIC_figury/`; 
               version = 'v2'; 
           }
           else { 
-              baseUrl = '/karty/PST_a_CAN/RUB/'; 
+              baseUrl = `${CDN_URL}/PST_a_CAN/RUB/`; 
               version = 'v1'; 
           }
           break;

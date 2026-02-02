@@ -26,7 +26,9 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
 }) => {
   const isBack = side === 'back';
   const gameType = card?.gameType || GameType.PokerStandard;
-  const crossOriginAttr = printMode ? "anonymous" : undefined;
+  
+  // Vždy používáme anonymous pro externí obrázky (CORS)
+  const crossOriginAttr = "anonymous";
   const [imgError, setImgError] = useState(false);
 
   // Reset error state when card changes
@@ -51,25 +53,19 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
       const target = e.currentTarget;
       let src = target.src;
       
-      // Prevent infinite loops if fallback also fails
       if (src.includes('retry=done')) {
           setImgError(true);
           return;
       }
 
-      console.warn("Failed to load image. Attempting Smart Path Recovery...", src);
-
-      // Strategy: 
-      // 1. Convert the URL path to lowercase. 
-      //    (e.g. /karty/M1H/RUB/file.png -> /karty/m1h/rub/file.png)
-      //    This handles cases where users renamed folders to lowercase on Linux servers.
+      console.warn("Failed to load image. Attempting recovery...", src);
       
+      // Pokus o opravu cesty na lowercase
       const url = new URL(src);
       if (!url.searchParams.has('retry')) {
            const lowerPath = url.pathname.toLowerCase();
-           target.src = `${lowerPath}${url.search}&retry=done`;
+           target.src = `${url.origin}${lowerPath}${url.search}&retry=done`;
       } else {
-           // If we already tried retrying, give up and show CSS fallback
            setImgError(true);
       }
   };
@@ -163,10 +159,9 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
     <div onClick={!printMode ? onClick : undefined} className={containerClasses}>
       <div className={innerClasses} style={{ borderColor: printMode ? '#000000' : card.borderColor }}>
         
-        {/* CSS FALLBACK: If template image fails or is missing, we render standard corner indices */}
+        {/* CSS FALLBACK */}
         {(!hasTemplate || imgError) && (
             <>
-                {/* TOP LEFT */}
                 <div className="absolute top-[5%] left-[5%] flex flex-col items-center z-20">
                 {isJoker ? (
                     <div className="flex flex-col items-center">
@@ -189,7 +184,6 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                 )}
                 </div>
 
-                {/* BOTTOM RIGHT (Rotated) */}
                 {!isSingleHeaded && (
                 <div className="absolute bottom-[5%] right-[5%] flex flex-col items-center transform rotate-180 z-20">
                     {isJoker ? (
@@ -214,7 +208,6 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                 </div>
                 )}
 
-                {/* CENTER ART (Only if missing template image) */}
                 {(!card.customImage) && (
                     <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
                          {getSuitIcon(card.suit, "w-32 h-32", isJoker)}
@@ -224,7 +217,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
         )}
 
         <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden">
-           {/* TEMPLATE IMAGE (The card frame/artwork) */}
+           {/* TEMPLATE IMAGE (z nového serveru) */}
            {hasTemplate && !isMaskStyle && card.templateImage && !imgError && (
                <div className="absolute inset-0 z-0">
                    <img 
@@ -237,7 +230,6 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                </div>
            )}
 
-           {/* USER UPLOADED PHOTO */}
            {card.customImage ? (
              <div className={`relative w-full h-full ${isMaskStyle ? 'z-0' : 'z-10'}`}>
                {card.isBackgroundRemoved && !printMode && (
@@ -289,7 +281,6 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
              )
            )}
 
-           {/* MASK OVERLAY (For Face-in-hole cards) */}
            {hasTemplate && isMaskStyle && card.templateImage && !imgError && (
                <div className="absolute inset-0 z-20 pointer-events-none">
                    <img 

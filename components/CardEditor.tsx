@@ -103,19 +103,27 @@ const CardEditor: React.FC = () => {
       try {
         let parsedDeck: CardConfig[] = JSON.parse(savedDeck);
         
-        // --- MIGRATION FIX: Clean up old "web2" absolute URLs ---
-        // Converts "https://web2.itnahodinu.cz/karty/..." to "/karty/..."
-        // This ensures images load from the CURRENT server (web10/mycards).
-        parsedDeck = parsedDeck.map(card => ({
-            ...card,
-            templateImage: card.templateImage 
-                ? card.templateImage.replace(/^https?:\/\/[^\/]+/, '') // Remove protocol and domain
-                : undefined
-        }));
+        // --- MIGRATION FIX: Update old local paths to new CDN paths ---
+        const CDN_PREFIX = 'https://webkarty.itnahodinu.cz';
+        parsedDeck = parsedDeck.map(card => {
+            let tmpl = card.templateImage;
+            // If it starts with /karty/, prepend new CDN
+            if (tmpl && tmpl.startsWith('/karty/')) {
+                tmpl = CDN_PREFIX + tmpl;
+            }
+            // If it already has some other domain, replace it
+            else if (tmpl && !tmpl.startsWith(CDN_PREFIX) && tmpl.includes('/karty/')) {
+                tmpl = tmpl.replace(/^https?:\/\/[^\/]+/, CDN_PREFIX);
+            }
+            return { ...card, templateImage: tmpl };
+        });
 
         let parsedBack = savedBack ? JSON.parse(savedBack) : null;
         if (parsedBack && parsedBack.customImage) {
-             parsedBack.customImage = parsedBack.customImage.replace(/^https?:\/\/[^\/]+(\/karty\/)/, '$1');
+             // Similar fix for back image if it's a default template
+             if (parsedBack.customImage.startsWith('/karty/')) {
+                 parsedBack.customImage = CDN_PREFIX + parsedBack.customImage;
+             }
         }
 
         setDeck(parsedDeck);
@@ -208,21 +216,22 @@ const CardEditor: React.FC = () => {
       const firstEditable = newDeck.find(c => !c.isLocked);
       if (firstEditable) setActiveCardId(firstEditable.id);
 
-      // --- DEFAULT BACK IMAGE LOGIC ---
+      // --- DEFAULT BACK IMAGE LOGIC (UPDATED FOR CDN) ---
+      const CDN_BASE = 'https://webkarty.itnahodinu.cz/karty';
       if (selectedGame === GameType.MariasSingle) {
-          setBackConfig(prev => ({ ...prev, customImage: '/karty/M1H/RUB/m1h_v1_00_rub.png' }));
+          setBackConfig(prev => ({ ...prev, customImage: `${CDN_BASE}/M1H/RUB/m1h_v1_00_rub.png` }));
       } 
       else if (selectedGame === GameType.MariasDouble) {
-          setBackConfig(prev => ({ ...prev, customImage: '/karty/M2H/RUB/m2h_v1_00_rub.png' }));
+          setBackConfig(prev => ({ ...prev, customImage: `${CDN_BASE}/M2H/RUB/m2h_v1_00_rub.png` }));
       } 
       else if (selectedGame === GameType.PokerStandard) {
-          setBackConfig(prev => ({ ...prev, customImage: '/karty/PST2BIG/RUB/p2b_v1_00_rub.png' }));
+          setBackConfig(prev => ({ ...prev, customImage: `${CDN_BASE}/PST2BIG/RUB/p2b_v1_00_rub.png` }));
       } 
       else if (selectedGame === GameType.PokerBig) {
-          setBackConfig(prev => ({ ...prev, customImage: '/karty/PST4BIG/RUB/p4b_v1_00_rub.png' }));
+          setBackConfig(prev => ({ ...prev, customImage: `${CDN_BASE}/PST4BIG/RUB/p4b_v1_00_rub.png` }));
       } 
       else if (selectedGame === GameType.Canasta) {
-          setBackConfig(prev => ({ ...prev, customImage: '/karty/PST_a_CAN/RUB/pst_v1_00_rub.png' }));
+          setBackConfig(prev => ({ ...prev, customImage: `${CDN_BASE}/PST_a_CAN/RUB/pst_v1_00_rub.png` }));
       }
     }
     setStep('design-back');
