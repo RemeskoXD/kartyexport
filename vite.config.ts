@@ -8,12 +8,13 @@ export default defineConfig({
     port: 3000,
     proxy: {
       // Proxy pro obrázky karet - směruje na produkční server
+      // Změněno na web10 (kde je aplikace a obrázky)
       '/karty': {
-        target: 'https://web9.itnahodinu.cz',
+        target: 'https://web10.itnahodinu.cz',
         changeOrigin: true,
         secure: false
       },
-      // Proxy pro API volání
+      // Proxy pro API volání (stále na backend web9)
       '/api.php': {
         target: 'https://web9.itnahodinu.cz',
         changeOrigin: true,

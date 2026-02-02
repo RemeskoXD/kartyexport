@@ -101,10 +101,27 @@ const CardEditor: React.FC = () => {
     
     if (savedDeck && savedGame) {
       try {
-        setDeck(JSON.parse(savedDeck));
+        let parsedDeck: CardConfig[] = JSON.parse(savedDeck);
+        
+        // --- MIGRATION FIX: Clean up old "web2" absolute URLs ---
+        // Converts "https://web2.itnahodinu.cz/karty/..." to "/karty/..."
+        // This ensures images load from the CURRENT server (web10/mycards).
+        parsedDeck = parsedDeck.map(card => ({
+            ...card,
+            templateImage: card.templateImage 
+                ? card.templateImage.replace(/^https?:\/\/[^\/]+/, '') // Remove protocol and domain
+                : undefined
+        }));
+
+        let parsedBack = savedBack ? JSON.parse(savedBack) : null;
+        if (parsedBack && parsedBack.customImage) {
+             parsedBack.customImage = parsedBack.customImage.replace(/^https?:\/\/[^\/]+(\/karty\/)/, '$1');
+        }
+
+        setDeck(parsedDeck);
         setSelectedGame(savedGame as GameType);
         if (savedStyle) setSelectedStyle(savedStyle as CardStyle);
-        if (savedBack) setBackConfig(JSON.parse(savedBack));
+        if (parsedBack) setBackConfig(parsedBack);
         if (savedStep) setStep(savedStep as EditorStep);
         else setStep('edit-deck');
       } catch (e) {

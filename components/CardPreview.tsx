@@ -11,7 +11,7 @@ export interface CardPreviewProps {
   selected?: boolean;
   printMode?: boolean;
   side?: 'face' | 'back';
-  showCenterMark?: boolean; // New prop for positioning help
+  showCenterMark?: boolean;
 }
 
 export const CardPreview: React.FC<CardPreviewProps> = ({ 
@@ -24,25 +24,16 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
   side = 'face',
   showCenterMark = false
 }) => {
-  // Determine if we are rendering Back or Face
   const isBack = side === 'back';
-  
-  // Safe accessors depending on what data we have
-  const gameType = card?.gameType || GameType.PokerStandard; // Fallback for back preview
-  
-  // CORS Policy: Only use anonymous crossorigin when strictly needed (exporting/printing/canvas)
+  const gameType = card?.gameType || GameType.PokerStandard;
   const crossOriginAttr = printMode ? "anonymous" : undefined;
 
-  // Aspect Ratio
   const getAspectRatioClass = () => {
     if (printMode) return 'w-full h-full';
     switch (gameType) {
       case GameType.MariasSingle:
       case GameType.MariasDouble:
         return 'aspect-[56/89]';
-      case GameType.PokerStandard:
-      case GameType.PokerBig:
-        return 'aspect-[63/88]';
       case GameType.Canasta:
         return 'aspect-[57/88]';
       default:
@@ -54,14 +45,10 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
       const target = e.currentTarget;
       const src = target.src;
       console.warn("Failed to load image:", src);
-      
-      // Try uppercase extension fallback for Linux servers (case sensitivity)
       if (src.endsWith('.png') && !src.includes('RETRY_UPPER')) {
           target.src = src.replace('.png', '.PNG') + '?RETRY_UPPER';
       } else if (src.endsWith('.PNG') && !src.includes('RETRY_LOWER')) {
           target.src = src.replace('.PNG', '.png') + '?RETRY_LOWER';
-      } else {
-         // Placeholder logic handled by UI if image is broken
       }
   };
 
@@ -135,12 +122,6 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
   const isSingleHeaded = card.gameType === GameType.MariasSingle;
   const rankLabel = getRankLabel(card.rank, card.gameType);
   const hasTemplate = !!card.templateImage;
-
-  // Process URLs for export (Removed timestamp hack as we are moving to same-origin)
-  const templateImageSrc = card.templateImage;
-  const customImageSrc = card.customImage;
-
-  // Determine if user image should be BEHIND the template (for Faces/Masks/Frames)
   const isMaskStyle = hasTemplate && (
     (card.templateImage || '').toLowerCase().includes('obliceje') || 
     (card.templateImage || '').toLowerCase().includes('figury')
@@ -158,7 +139,6 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
     <div onClick={!printMode ? onClick : undefined} className={containerClasses}>
       <div className={innerClasses} style={{ borderColor: printMode ? '#000000' : card.borderColor }}>
         
-        {/* CORNERS (Only show if no template image is present, or if it's not a full card design) */}
         {!hasTemplate && (
             <>
                 <div className="absolute top-[5%] left-[5%] flex flex-col items-center z-20">
@@ -209,14 +189,11 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
             </>
         )}
 
-        {/* IMAGE AREA */}
         <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden">
-           
-           {/* Layer 1: Template Image (Only if it is BACKGROUND/Bottom Layer - i.e. NOT a mask) */}
-           {hasTemplate && !isMaskStyle && templateImageSrc && (
+           {hasTemplate && !isMaskStyle && card.templateImage && (
                <div className="absolute inset-0 z-0">
                    <img 
-                    src={templateImageSrc} 
+                    src={card.templateImage} 
                     alt="Template" 
                     crossOrigin={crossOriginAttr}
                     onError={handleImageError}
@@ -225,8 +202,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                </div>
            )}
 
-           {/* Layer 2: User Custom Image */}
-           {customImageSrc ? (
+           {card.customImage ? (
              <div className={`relative w-full h-full ${isMaskStyle ? 'z-0' : 'z-10'}`}>
                {card.isBackgroundRemoved && !printMode && (
                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/az-subtle.png')] opacity-30 z-0"></div>
@@ -234,7 +210,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
 
                {isSingleHeaded ? (
                  <img 
-                   src={customImageSrc} 
+                   src={card.customImage} 
                    alt="Custom" 
                    crossOrigin={crossOriginAttr}
                    className={`w-full h-full object-cover z-10 transition-transform duration-100 ${card.isBackgroundRemoved ? 'object-contain scale-90' : ''}`}
@@ -244,7 +220,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                  <>
                    <div className="absolute top-0 left-0 right-0 h-1/2 overflow-hidden z-10">
                       <img 
-                        src={customImageSrc} 
+                        src={card.customImage} 
                         alt="Top" 
                         crossOrigin={crossOriginAttr}
                         className={`w-full h-[200%] object-cover object-top transition-transform duration-100 ${card.isBackgroundRemoved ? 'object-contain' : ''}`}
@@ -253,7 +229,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                    </div>
                    <div className="absolute bottom-0 left-0 right-0 h-1/2 overflow-hidden transform rotate-180 z-10 border-t border-white/20">
                       <img 
-                        src={customImageSrc} 
+                        src={card.customImage} 
                         alt="Bottom" 
                         crossOrigin={crossOriginAttr}
                         className={`w-full h-[200%] object-cover object-top transition-transform duration-100 ${card.isBackgroundRemoved ? 'object-contain' : ''}`}
@@ -264,7 +240,6 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                )}
              </div>
            ) : (
-             // Placeholder icon if no custom image AND no template
              !hasTemplate && (
                  <div className="text-gray-300 flex flex-col items-center p-4 text-center z-10">
                 {isJoker ? (
@@ -278,11 +253,10 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
              )
            )}
 
-           {/* Layer 3: Template Image (If it IS a mask/Face/Frame style - Render ON TOP) */}
-           {hasTemplate && isMaskStyle && templateImageSrc && (
+           {hasTemplate && isMaskStyle && card.templateImage && (
                <div className="absolute inset-0 z-20 pointer-events-none">
                    <img 
-                    src={templateImageSrc} 
+                    src={card.templateImage} 
                     alt="Template" 
                     crossOrigin={crossOriginAttr}
                     onError={handleImageError}
@@ -291,7 +265,6 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                </div>
            )}
 
-           {/* Center Mark Overlay */}
            {showCenterMark && !printMode && card.customImage && (
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-30">
                 <div className="w-8 h-[1px] bg-gold-500/50 absolute"></div>
@@ -301,7 +274,6 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
            )}
         </div>
 
-        {/* CUSTOM TEXT */}
         {card.customText && (
           <div className={`absolute left-0 right-0 z-40 flex justify-center ${isSingleHeaded ? 'bottom-[10%]' : 'top-1/2 -translate-y-1/2'}`}>
             <span 
@@ -315,4 +287,4 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
         {!printMode && <div className="absolute inset-1 border border-gold-400 opacity-30 rounded-[8px] pointer-events-none z-50"></div>}
       </div>
     );
-  };
+};
