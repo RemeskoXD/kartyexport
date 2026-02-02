@@ -27,7 +27,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
   const isBack = side === 'back';
   const gameType = card?.gameType || GameType.PokerStandard;
   
-  // Vždy používáme anonymous pro externí obrázky (CORS)
+  // Vždy používáme anonymous pro externí obrázky (CORS) - nutné pro export
   const crossOriginAttr = "anonymous";
   const [imgError, setImgError] = useState(false);
 
@@ -207,12 +207,6 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                     )}
                 </div>
                 )}
-
-                {(!card.customImage) && (
-                    <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
-                         {getSuitIcon(card.suit, "w-32 h-32", isJoker)}
-                    </div>
-                )}
             </>
         )}
 
@@ -230,7 +224,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                </div>
            )}
 
-           {card.customImage ? (
+           {card.customImage && (
              <div className={`relative w-full h-full ${isMaskStyle ? 'z-0' : 'z-10'}`}>
                {card.isBackgroundRemoved && !printMode && (
                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/az-subtle.png')] opacity-30 z-0"></div>
@@ -267,18 +261,6 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                  </>
                )}
              </div>
-           ) : (
-             !hasTemplate && (
-                 <div className="text-gray-300 flex flex-col items-center p-4 text-center z-10">
-                {isJoker ? (
-                    <div className={`w-24 h-24 opacity-20 ${isJokerRed ? 'text-red-600' : 'text-slate-900'}`}>
-                        {getSuitIcon(card.suit, "w-full h-full", true)}
-                    </div>
-                ) : (
-                    <span className="mb-2 text-3xl opacity-20">📷</span>
-                )}
-                </div>
-             )
            )}
 
            {hasTemplate && isMaskStyle && card.templateImage && !imgError && (

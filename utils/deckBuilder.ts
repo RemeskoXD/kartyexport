@@ -1,6 +1,6 @@
 import { GameType, CardConfig, Suit, Rank, GameConfig, CardStyle } from '../types';
 
-// TOTO JE KLÍČOVÁ ZMĚNA - Odkazujeme na externí úložiště obrázků
+// Odkaz na externí úložiště obrázků
 const CDN_URL = 'https://webkarty.itnahodinu.cz/karty';
 
 export const GAME_VARIANTS: Record<GameType, GameConfig> = {
@@ -173,7 +173,7 @@ export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConf
   let version = 'v1';
   let isMarias = false;
 
-  // Zde definujeme cesty k novému serveru
+  // Cesty na CDN webkarty.itnahodinu.cz
   switch(gameType) {
       case GameType.MariasSingle: 
           isMarias = true;

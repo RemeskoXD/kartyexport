@@ -216,7 +216,7 @@ const CardEditor: React.FC = () => {
       const firstEditable = newDeck.find(c => !c.isLocked);
       if (firstEditable) setActiveCardId(firstEditable.id);
 
-      // --- DEFAULT BACK IMAGE LOGIC (UPDATED FOR CDN) ---
+      // --- DEFAULT BACK IMAGE LOGIC (CDN UPDATED) ---
       const CDN_BASE = 'https://webkarty.itnahodinu.cz/karty';
       if (selectedGame === GameType.MariasSingle) {
           setBackConfig(prev => ({ ...prev, customImage: `${CDN_BASE}/M1H/RUB/m1h_v1_00_rub.png` }));
