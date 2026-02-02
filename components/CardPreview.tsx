@@ -45,10 +45,13 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
       const target = e.currentTarget;
       const src = target.src;
       console.warn("Failed to load image:", src);
-      if (src.endsWith('.png') && !src.includes('RETRY_UPPER')) {
-          target.src = src.replace('.png', '.PNG') + '?RETRY_UPPER';
-      } else if (src.endsWith('.PNG') && !src.includes('RETRY_LOWER')) {
+      
+      // Default deckbuilder now generates .PNG (uppercase).
+      // Fallback logic: try .png (lowercase) if uppercase fails.
+      if (src.endsWith('.PNG') && !src.includes('RETRY_LOWER')) {
           target.src = src.replace('.PNG', '.png') + '?RETRY_LOWER';
+      } else if (src.endsWith('.png') && !src.includes('RETRY_UPPER')) {
+          target.src = src.replace('.png', '.PNG') + '?RETRY_UPPER';
       }
   };
 
