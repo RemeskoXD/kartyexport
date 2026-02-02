@@ -94,8 +94,8 @@ const getMariasFileName = (prefix: 'm1h' | 'm2h', rank: Rank, suit: Suit, versio
     const finalIndex = suitOffset + rankOffset;
     const paddedIndex = finalIndex.toString().padStart(2, '0');
     
-    // Standardize to lowercase .png
-    return `${prefix}_${version}_${paddedIndex}_${suitName}_${rankName}.png`;
+    // Force .png and add version parameter to bust cache
+    return `${prefix}_${version}_${paddedIndex}_${suitName}_${rankName}.png?v=fixed`;
 };
 
 const getPokerFileName = (prefix: 'pst' | 'p4b' | 'p2b', rank: Rank, suit: Suit, version: string): string => {
@@ -106,7 +106,7 @@ const getPokerFileName = (prefix: 'pst' | 'p4b' | 'p2b', rank: Rank, suit: Suit,
     // Handle JOKER
     if (rank === Rank.Joker) {
         index = (suit === Suit.Hearts || suit === Suit.Diamonds) ? 2 : 3;
-        return `${prefix}_${version}_${index.toString().padStart(2, '0')}_joker.png`;
+        return `${prefix}_${version}_${index.toString().padStart(2, '0')}_joker.png?v=fixed`;
     }
 
     let diamondName = 'kara'; 
@@ -156,7 +156,7 @@ const getPokerFileName = (prefix: 'pst' | 'p4b' | 'p2b', rank: Rank, suit: Suit,
         else index = 45 + (10 - parseInt(rank));
     }
 
-    return `${prefix}_${version}_${index.toString().padStart(2, '0')}_${suitName}_${rankName}.png`;
+    return `${prefix}_${version}_${index.toString().padStart(2, '0')}_${suitName}_${rankName}.png?v=fixed`;
 };
 
 export const generateDeck = (gameType: GameType, cardStyle: CardStyle): CardConfig[] => {

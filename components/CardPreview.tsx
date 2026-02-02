@@ -47,9 +47,31 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
     }
   };
 
-  const handleImageError = () => {
-      // If image fails, switch to CSS Fallback mode
-      setImgError(true);
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+      const target = e.currentTarget;
+      let src = target.src;
+      
+      // Prevent infinite loops if fallback also fails
+      if (src.includes('retry=done')) {
+          setImgError(true);
+          return;
+      }
+
+      console.warn("Failed to load image. Attempting Smart Path Recovery...", src);
+
+      // Strategy: 
+      // 1. Convert the URL path to lowercase. 
+      //    (e.g. /karty/M1H/RUB/file.png -> /karty/m1h/rub/file.png)
+      //    This handles cases where users renamed folders to lowercase on Linux servers.
+      
+      const url = new URL(src);
+      if (!url.searchParams.has('retry')) {
+           const lowerPath = url.pathname.toLowerCase();
+           target.src = `${lowerPath}${url.search}&retry=done`;
+      } else {
+           // If we already tried retrying, give up and show CSS fallback
+           setImgError(true);
+      }
   };
 
   // --- RENDER BACK ---
